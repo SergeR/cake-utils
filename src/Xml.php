@@ -199,6 +199,7 @@ class Xml
             libxml_use_internal_errors($internalErrors);
         }
     }
+
     /**
      * Transform an array into a SimpleXMLElement
      *
