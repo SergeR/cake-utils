@@ -93,12 +93,12 @@ class Xml
      *
      * If using array as input, you can pass `options` from Xml::fromArray.
      *
-     * @param string|array $input XML string, a path to a file, a URL or an array
+     * @param array|string $input XML string, a path to a file, a URL or an array
      * @param array $options The options to use
      * @return SimpleXMLElement|DOMDocument SimpleXMLElement or DOMDocument
      * @throws XmlException
      */
-    public static function build($input, array $options = [])
+    public static function build(array|string $input, array $options = []): SimpleXMLElement|DOMDocument
     {
         $defaults = [
             'return' => 'simplexml',
@@ -110,7 +110,7 @@ class Xml
         if (is_array($input) || is_object($input)) {
             return static::fromArray($input, $options);
         }
-        if (strpos($input, '<') !== false) {
+        if (str_contains($input, '<')) {
             return static::_loadXml($input, $options);
         }
         if ($options['readFile'] && file_exists($input)) {
@@ -165,6 +165,7 @@ class Xml
      * @param array $options The options to use. See Xml::build()
      * @return SimpleXMLElement|DOMDocument
      * @throws XmlException
+     * @todo use libxml_set_external_entity_loader/libxml_get_external_entity_loader
      */
     public static function loadHtml($input, $options = [])
     {
@@ -233,12 +234,13 @@ class Xml
      *
      * `<root><tag id="1" value="defect">description</tag></root>`
      *
-     * @param array $input Array with data or a collection instance.
-     * @param string|array $options The options to use or a string to use as format.
+     * @param array|object $input Array with data or a collection instance.
+     * @param array|string $options The options to use or a string to use as format.
      * @return SimpleXMLElement|DOMDocument SimpleXMLElement or DOMDocument
      * @throws XmlException
+     * @throws \DOMException
      */
-    public static function fromArray($input, $options = [])
+    public static function fromArray(array|object $input, array|string $options = []): SimpleXMLElement|DOMDocument
     {
         if (is_object($input) && method_exists($input, 'toArray') && is_callable([$input, 'toArray'])) {
             $input = call_user_func([$input, 'toArray']);
@@ -251,7 +253,7 @@ class Xml
             throw new XmlException('The key of input must be alphanumeric');
         }
         if (!is_array($options)) {
-            $options = ['format' => (string)$options];
+            $options = ['format' => $options];
         }
         $defaults = [
             'format' => 'tags',
@@ -272,19 +274,21 @@ class Xml
         }
         return $dom;
     }
+
     /**
      * Recursive method to create childs from array
      *
      * @param DOMDocument $dom Handler to DOMDocument
-     * @param \DOMElement $node Handler to DOMElement (child)
+     * @param DOMDocument|\DOMElement $node Handler to DOMElement (child)
      * @param array $data Array of data to append to the $node.
      * @param string $format Either 'attributes' or 'tags'. This determines where nested keys go.
      * @return void
      * @throws XmlException
+     * @throws \DOMException
      */
-    protected static function _fromArray($dom, $node, &$data, $format)
+    protected static function _fromArray(DOMDocument $dom, \DOMDocument|\DOMElement $node, array &$data, string $format): void
     {
-        if (empty($data) || !is_array($data)) {
+        if (empty($data)) {
             return;
         }
         foreach ($data as $key => $value) {
@@ -350,8 +354,9 @@ class Xml
      * @param array $data Array with information to create childs
      * @return void
      * @throws XmlException
+     * @throws \DOMException
      */
-    protected static function _createChild($data)
+    protected static function _createChild(array $data): void
     {
         $data += [
             'dom' => null,
@@ -395,11 +400,11 @@ class Xml
     /**
      * Returns this XML structure as an array.
      *
-     * @param SimpleXMLElement|DOMDocument|DOMNode $obj SimpleXMLElement, DOMDocument or DOMNode instance
+     * @param DOMNode|SimpleXMLElement $obj SimpleXMLElement, DOMDocument or DOMNode instance
      * @return array Array representation of the XML structure.
      * @throws XmlException
      */
-    public static function toArray($obj)
+    public static function toArray(DOMNode|SimpleXMLElement $obj): array
     {
         if ($obj instanceof DOMNode) {
             $obj = simplexml_import_dom($obj);
@@ -421,7 +426,7 @@ class Xml
      * @param array $namespaces List of namespaces in XML
      * @return void
      */
-    protected static function _toArray($xml, &$parentData, $ns, $namespaces)
+    protected static function _toArray(SimpleXMLElement $xml, array &$parentData, string $ns, array $namespaces): void
     {
         $data = [];
         foreach ($namespaces as $namespace) {
