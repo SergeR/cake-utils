@@ -695,7 +695,7 @@ class Text
      * @return string Trimmed string.
      * @see \SergeR\CakeUtility\Text::truncate()
      */
-    public static function truncateByWidth($text, $length = 100, array $options = [])
+    public static function truncateByWidth(string $text, int $length = 100, array $options = []): string
     {
         return static::truncate($text, $length, ['trimWidth' => true] + $options);
     }

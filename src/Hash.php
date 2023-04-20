@@ -212,7 +212,7 @@ class Hash
         }
         reset($data);
         $depth = 1;
-        while ($elem = array_shift($data)) {
+        while (null !== ($elem = array_shift($data))) {
             if (is_array($elem)) {
                 $depth += 1;
                 $data =& $elem;
