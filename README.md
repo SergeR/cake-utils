@@ -9,7 +9,13 @@ dependencies.
 ## Why?
 
 I like CakePHP, a powerful, beautiful and flexible PHP framework. But I can't use it with every project I work :( .
-So I clone this very handy toolbox, drops out any dependencies to Cake/Core to use this library separately.   
+So I clone this very handy toolbox, drops out any dependencies to Cake/Core to use this library separately.
+
+## Versioning strategy
+
+ - 1.x.x — PHP 5.6-7.3, receives code backports as soon as my projects runs on these PHP versions
+ - 2.x.x — PHP 7.4, receives code and tests backports
+ - 3.x.x — PHP 8.0 currently in the master branch
 
 ## What's in the toolbox?
 
