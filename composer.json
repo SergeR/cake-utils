@@ -18,6 +18,9 @@
     "php": ">=8.0",
     "ext-mbstring": "*"
   },
+  "require-dev": {
+    "vimeo/psalm": ">=5.9.0"
+  },
   "suggest": {
     "ext-intl": "To use Text::transliterate() or Text::slug()",
     "lib-ICU": "To use Text::transliterate() or Text::slug()",

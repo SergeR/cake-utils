@@ -25,9 +25,9 @@ class Text
     /**
      * Default transliterator.
      *
-     * @var Transliterator Transliterator instance.
+     * @var Transliterator|null Transliterator instance.
      */
-    protected static Transliterator $_defaultTransliterator;
+    protected static ?Transliterator $_defaultTransliterator;
 
     /**
      * Default transliterator id string.
@@ -91,9 +91,9 @@ class Text
      * @param string $separator The token to split the data on.
      * @param string $leftBound The left boundary to ignore separators in.
      * @param string $rightBound The right boundary to ignore separators in.
-     * @return array|string Array of tokens in $data or original input if empty.
+     * @return array Array of tokens in $data or original input if empty.
      */
-    public static function tokenize(string $data, string $separator = ',', string $leftBound = '(', string $rightBound = ')'): array|string
+    public static function tokenize(string $data, string $separator = ',', string $leftBound = '(', string $rightBound = ')'): array
     {
         if (empty($data)) {
             return [];
@@ -119,7 +119,10 @@ class Text
                 }
             }
             if ($tmpOffset !== -1) {
+                /** @psalm-suppress PossiblyFalseOperand */
                 $buffer .= mb_substr($data, $offset, $tmpOffset - $offset);
+
+                /** @psalm-suppress PossiblyFalseArgument */
                 $char = mb_substr($data, $tmpOffset, 1);
                 if (!$depth && $char === $separator) {
                     $results[] = $buffer;
@@ -145,6 +148,7 @@ class Text
                         }
                     }
                 }
+                /** @psalm-suppress PossiblyFalseOperand */
                 $tmpOffset += 1;
                 $offset = $tmpOffset;
             } else {
@@ -219,7 +223,7 @@ class Text
         }
 
         $dataKeys = array_keys($data);
-        $hashKeys = array_map('crc32', $dataKeys);
+        $hashKeys = array_map(fn($key) => hash('crc32b', $key), $dataKeys);
         $tempData = array_combine($dataKeys, $hashKeys);
         krsort($tempData);
 
@@ -266,8 +270,8 @@ class Text
         switch ($clean['method']) {
             case 'html':
                 $clean += [
-                    'word' => '[\w,.]+',
-                    'andText' => true,
+                    'word'        => '[\w,.]+',
+                    'andText'     => true,
                     'replacement' => '',
                 ];
                 $kleenex = sprintf(
@@ -284,8 +288,8 @@ class Text
                 break;
             case 'text':
                 $clean += [
-                    'word' => '[\w,.]+',
-                    'gap' => '[\s]*(?:(?:and|or)[\s]*)?',
+                    'word'        => '[\w,.]+',
+                    'gap'         => '[\s]*(?:(?:and|or)[\s]*)?',
                     'replacement' => '',
                 ];
 
@@ -406,9 +410,11 @@ class Text
      * @param string $break The line is broken using the optional break parameter. Defaults to '\n'.
      * @param bool $cut If the cut is set to true, the string is always wrapped at the specified width.
      * @return string Formatted text.
+     *
      */
-    public static function wordWrap($text, int $width = 72, string $break = "\n", bool $cut = false): string
+    public static function wordWrap(string $text, int $width = 72, string $break = "\n", bool $cut = false): string
     {
+        /** @psalm-suppress ArgumentTypeCoercion */
         $paragraphs = explode($break, $text);
         foreach ($paragraphs as &$paragraph) {
             $paragraph = static::_wordWrap($paragraph, $width, $break, $cut);
@@ -492,9 +498,9 @@ class Text
 
         $defaults = [
             'format' => '<span class="highlight">\1</span>',
-            'html' => false,
-            'regex' => '|%s|iu',
-            'limit' => -1,
+            'html'   => false,
+            'regex'  => '|%s|iu',
+            'limit'  => -1,
         ];
         $options += $defaults;
 
@@ -544,7 +550,7 @@ class Text
      *
      * @param string $text String to truncate.
      * @param int $length Length of returned string, including ellipsis.
-     * @param array{ellipsis:string, exact:bool} $options An array of options.
+     * @param array $options An array of options.
      * @return string Trimmed string.
      */
     public static function tail(string $text, int $length = 100, array $options = []): string
@@ -837,7 +843,7 @@ class Text
         $spacepos = mb_strrpos($text, ' ');
 
         if ($spacepos !== false) {
-            $lastWord = mb_strrpos($text, $spacepos);
+            $lastWord = mb_substr($text, $spacepos);
 
             // Some languages are written without word separation.
             // We recognize a string as a word if it doesn't contain any full-width characters.
@@ -1057,11 +1063,11 @@ class Text
     /**
      * Set the default transliterator.
      *
-     * @param Transliterator $transliterator A `Transliterator` instance.
+     * @param Transliterator|null $transliterator A `Transliterator` instance.
      * @return void
      * @since 3.7.0
      */
-    public static function setTransliterator(Transliterator $transliterator): void
+    public static function setTransliterator(?Transliterator $transliterator): void
     {
         static::$_defaultTransliterator = $transliterator;
     }
@@ -1071,7 +1077,7 @@ class Text
      *
      * @return string Transliterator identifier.
      */
-    public static function getTransliteratorId()
+    public static function getTransliteratorId(): ?string
     {
         return static::$_defaultTransliteratorId;
     }
@@ -1102,7 +1108,7 @@ class Text
     public static function transliterate(string $string, string|Transliterator|null $transliterator = null): string
     {
         if (!$transliterator) {
-            $transliterator = static::$_defaultTransliterator ?: static::$_defaultTransliteratorId;
+            $transliterator = static::$_defaultTransliterator ?? static::$_defaultTransliteratorId;
         }
 
         return transliterator_transliterate($transliterator, $string);
@@ -1123,21 +1129,21 @@ class Text
      *   For e.g. this option can be set to '.' to generate clean file names.
      *
      * @param string $string the string you want to slug
-     * @param array $options If string it will be use as replacement character
+     * @param array|string $options If string it will be use as replacement character
      *   or an array of options.
      * @return string
      * @see setTransliterator()
      * @see setTransliteratorId()
      */
-    public static function slug(string $string, array $options = []): string
+    public static function slug(string $string, array|string $options = []): string
     {
         if (is_string($options)) {
             $options = ['replacement' => $options];
         }
         $options += [
-            'replacement' => '-',
+            'replacement'      => '-',
             'transliteratorId' => null,
-            'preserve' => null
+            'preserve'         => null
         ];
 
         if ($options['transliteratorId'] !== false) {
@@ -1150,8 +1156,8 @@ class Text
         }
         $quotedReplacement = preg_quote($options['replacement'], '/');
         $map = [
-            '/[' . $regex . ']/mu' => ' ',
-            '/[\s]+/mu' => $options['replacement'],
+            '/[' . $regex . ']/mu'                                             => ' ',
+            '/[\s]+/mu'                                                        => $options['replacement'],
             sprintf('/^[%s]+|[%s]+$/', $quotedReplacement, $quotedReplacement) => '',
         ];
         $string = preg_replace(array_keys($map), $map, $string);

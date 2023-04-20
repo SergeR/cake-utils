@@ -400,10 +400,10 @@ class Inflector
      *
      * @param string $type Inflection type
      * @param string $key Original value
-     * @param bool|string $value Inflected value
-     * @return string|bool Inflected value on cache hit or false on cache miss.
+     * @param false|string $value Inflected value
+     * @return string|false Inflected value on cache hit or false on cache miss.
      */
-    protected static function _cache(string $type, string $key, bool|string $value = false): bool|string
+    protected static function _cache(string $type, string $key, bool|string $value = false): false|string
     {
         $key = '_' . $key;
         $type = '_' . $type;
@@ -520,15 +520,26 @@ class Inflector
             return static::$_cache['singularize'][$word];
         }
         if (!isset(static::$_cache['irregular']['singular'])) {
-            static::$_cache['irregular']['singular'] = '(?:' . implode('|', static::$_irregular) . ')';
+            $wordList = array_values(static::$_irregular);
+            static::$_cache['irregular']['singular'] = '/(.*?(?:\\b|_))(' . implode('|', $wordList) . ')$/i';
+
+            $upperWordList = array_map('ucfirst', $wordList);
+            static::$_cache['irregular']['singularUpper'] = '/(.*?(?:\\b|[a-z]))(' .
+                implode('|', $upperWordList) .
+                ')$/';
         }
-        if (preg_match('/(.*?(?:\\b|_))(' . static::$_cache['irregular']['singular'] . ')$/i', $word, $regs)) {
-            static::$_cache['singularize'][$word] = $regs[1] . substr($regs[2], 0, 1) .
-                substr(array_search(strtolower($regs[2]), static::$_irregular), 1);
+        if (
+            preg_match(static::$_cache['irregular']['singular'], $word, $regs) ||
+            preg_match(static::$_cache['irregular']['singularUpper'], $word, $regs)
+        ) {
+            $suffix = array_search(strtolower($regs[2]), static::$_irregular, true);
+            $suffix = $suffix ? substr($suffix, 1) : '';
+            static::$_cache['singularize'][$word] = $regs[1] . substr($regs[2], 0, 1) . $suffix;
+
             return static::$_cache['singularize'][$word];
         }
         if (!isset(static::$_cache['uninflected'])) {
-            static::$_cache['uninflected'] = '(?:' . implode('|', static::$_uninflected) . ')';
+            static::$_cache['uninflected'] = '/^(' . implode('|', static::$_uninflected) . ')$/i';
         }
         if (preg_match('/^(' . static::$_cache['uninflected'] . ')$/i', $word, $regs)) {
             static::$_cache['pluralize'][$word] = $word;

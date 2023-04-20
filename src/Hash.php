@@ -40,7 +40,7 @@ class Hash
      */
     public static function apply(array $data, string $path, callable $function): mixed
     {
-        $values = (array)static::extract($data, $path);
+        $values = static::extract($data, $path);
         return call_user_func($function, $values);
     }
 
@@ -59,9 +59,6 @@ class Hash
     public static function check(array $data, string $path): bool
     {
         $results = self::extract($data, $path);
-        if (!is_array($results)) {
-            return false;
-        }
         return count($results) > 0;
     }
 
@@ -278,7 +275,7 @@ class Hash
      * but is faster for simple read operations.
      *
      * @param array $data Array of data to operate on.
-     * @param array|string|bool|null $path The path being searched for. Either a dot
+     * @param mixed $path The path being searched for. Either a dot
      *   separated string, or an array of path segments.
      * @param mixed|null $default The return value when the path does not exist
      * @return mixed The value fetched from the array, or null.
@@ -289,7 +286,7 @@ class Hash
             return $default;
         }
         if (is_string($path) || is_numeric($path)) {
-            $parts = explode('.', $path);
+            $parts = explode('.', (string)$path);
         } elseif (is_bool($path) || $path === null) {
             $parts = array($path);
         } else {
@@ -324,10 +321,11 @@ class Hash
     public static function expand(array $data, string $separator = '.'): array
     {
         $result = array();
-
         $stack = array();
+        $separator = strlen($separator) ? $separator : '.';
 
         foreach ($data as $flat => $value) {
+            /** @psalm-suppress ArgumentTypeCoercion */
             $keys = explode($separator, $flat);
             $keys = array_reverse($keys);
             $child = array(
@@ -484,9 +482,10 @@ class Hash
                 }
                 $data = $element;
                 reset($data);
-                $path .= $key . $separator;
+
+                $path = (string)$path . $key . $separator;
             } else {
-                $result[$path . $key] = $element;
+                $result[(string)$path . $key] = $element;
             }
 
             if (empty($data) && !empty($stack)) {
@@ -586,6 +585,7 @@ class Hash
     {
         $args = array_slice(func_get_args(), 1);
         $return = $data;
+        $stack = [];
 
         foreach ($args as &$curArg) {
             $stack[] = array((array)$curArg, &$return);
@@ -682,7 +682,7 @@ class Hash
             $parentId = static::get($result, $parentKeys);
 
             if (isset($idMap[$id][$options['children']])) {
-                $idMap[$id] = array_merge($result, (array)$idMap[$id]);
+                $idMap[$id] = array_merge($result, $idMap[$id]);
             } else {
                 $idMap[$id] = array_merge($result, array($options['children'] => array()));
             }
@@ -995,7 +995,7 @@ class Hash
             }
 
             // Pattern matches and other operators.
-            if ($op === '=' && $val && $val[0] === '/') {
+            if ($op === '=' && $val && $val[0] === '/' && is_string($prop)) {
                 if (!preg_match($val, $prop)) {
                     return false;
                 }
@@ -1016,7 +1016,7 @@ class Hash
     /**
      * Check a key against a token.
      *
-     * @param string $key The key in the array being searched.
+     * @param mixed $key The key in the array being searched.
      * @param string $token The token being matched.
      * @return bool
      */
@@ -1064,9 +1064,7 @@ class Hash
                 }
             } elseif ($op === 'remove') {
                 if ($i === $last) {
-                    if (is_array($_list)) {
-                        unset($_list[$key]);
-                    }
+                    unset($_list[$key]);
                     return $data;
                 }
                 if (!isset($_list[$key])) {
