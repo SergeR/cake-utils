@@ -561,7 +561,7 @@ class Hash
         $depth = array();
         if (reset($data) !== false) {
             foreach ($data as $value) {
-                $depth[] = static::maxDimensions($value) + 1;
+                $depth[] = is_array($value) ? static::maxDimensions($value) + 1 : 1;
             }
         }
         return empty($depth) ? 0 : max($depth);
