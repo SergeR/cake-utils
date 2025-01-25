@@ -27,7 +27,7 @@ class Text
      *
      * @var Transliterator|null Transliterator instance.
      */
-    protected static ?Transliterator $_defaultTransliterator;
+    protected static ?Transliterator $_defaultTransliterator = null;
 
     /**
      * Default transliterator id string.
@@ -206,8 +206,8 @@ class Text
             $format = sprintf(
                 '/(?<!%s)%s%%s%s/',
                 preg_quote($options['escape'], '/'),
-                str_replace('%', '%%', preg_quote($options['before'], '/')),
-                str_replace('%', '%%', preg_quote($options['after'], '/'))
+                str_replace('%', '%%', preg_quote((string)$options['before'], '/')),
+                str_replace('%', '%%', preg_quote((string)$options['after'], '/'))
             );
         }
 
@@ -1033,7 +1033,7 @@ class Text
         if ($i !== false) {
             $size = (float)substr($size, 0, $l);
 
-            return $size * pow(1024, $i + 1);
+            return $size * 1024 ** ($i + 1);
         }
 
         if (str_ends_with($size, 'B') && ctype_digit(substr($size, 0, -1))) {
@@ -1160,8 +1160,7 @@ class Text
             '/[\s]+/mu'                                                        => $options['replacement'],
             sprintf('/^[%s]+|[%s]+$/', $quotedReplacement, $quotedReplacement) => '',
         ];
-        $string = preg_replace(array_keys($map), $map, $string);
 
-        return $string;
+        return preg_replace(array_keys($map), $map, $string);
     }
 }
