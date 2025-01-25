@@ -426,7 +426,7 @@ class Inflector
     public static function reset()
     {
         if (empty(static::$_initialState)) {
-            static::$_initialState = get_class_vars(__CLASS__);
+            static::$_initialState = get_class_vars(self::class);
             return;
         }
         foreach (static::$_initialState as $key => $val) {

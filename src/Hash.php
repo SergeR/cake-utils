@@ -79,7 +79,7 @@ class Hash
     {
 
         if (empty($data)) {
-            return array();
+            return [];
         }
 
         if (is_array($keyPath)) {
@@ -89,7 +89,7 @@ class Hash
             $keys = static::extract($data, $keyPath);
         }
         if (empty($keys)) {
-            return array();
+            return [];
         }
 
         if (!empty($valuePath) && is_array($valuePath)) {
@@ -110,13 +110,13 @@ class Hash
             $group = static::extract($data, $groupPath);
             if (!empty($group)) {
                 $c = count($keys);
-                $out = array();
+                $out = [];
                 for ($i = 0; $i < $c; $i++) {
                     if (!isset($group[$i])) {
                         $group[$i] = 0;
                     }
                     if (!isset($out[$group[$i]])) {
-                        $out[$group[$i]] = array();
+                        $out[$group[$i]] = [];
                     }
                     $out[$group[$i]][$keys[$i]] = $vals[$i];
                 }
@@ -124,7 +124,7 @@ class Hash
             }
         }
         if (empty($vals)) {
-            return array();
+            return [];
         }
         return array_combine($keys, $vals);
     }
@@ -141,7 +141,7 @@ class Hash
         if (empty($data) || empty($needle)) {
             return false;
         }
-        $stack = array();
+        $stack = [];
 
         while (!empty($needle)) {
             $key = key($needle);
@@ -153,7 +153,7 @@ class Hash
                 unset($data[$key]);
 
                 if (!empty($val)) {
-                    $stack[] = array($val, $next);
+                    $stack[] = [$val, $next];
                 }
             } elseif (!array_key_exists($key, $data) || $data[$key] != $val) {
                 return false;
@@ -242,7 +242,7 @@ class Hash
      */
     public static function format(array $data, array $paths, $format)
     {
-        $extracted = array();
+        $extracted = [];
         $count = count($paths);
 
         if (!$count) {
@@ -252,13 +252,13 @@ class Hash
         for ($i = 0; $i < $count; $i++) {
             $extracted[] = static::extract($data, $paths[$i]);
         }
-        $out = array();
+        $out = [];
         $data = $extracted;
         $count = count($data[0]);
 
         $countTwo = count($data);
         for ($j = 0; $j < $count; $j++) {
-            $args = array();
+            $args = [];
             for ($i = 0; $i < $countTwo; $i++) {
                 if (array_key_exists($j, $data[$i])) {
                     $args[] = $data[$i][$j];
@@ -288,7 +288,7 @@ class Hash
         if (is_string($path) || is_numeric($path)) {
             $parts = explode('.', (string)$path);
         } elseif (is_bool($path) || $path === null) {
-            $parts = array($path);
+            $parts = [$path];
         } else {
             if (!is_array($path)) {
                 throw new InvalidArgumentException(sprintf('Invalid Parameter %s, should be dot separated path or array', var_export($path, true)));
@@ -320,31 +320,31 @@ class Hash
      */
     public static function expand(array $data, $separator = '.')
     {
-        $result = array();
-        $stack = array();
+        $result = [];
+        $stack = [];
         $separator = strlen($separator) ? $separator : '.';
 
         foreach ($data as $flat => $value) {
             /** @psalm-suppress ArgumentTypeCoercion */
             $keys = explode($separator, $flat);
             $keys = array_reverse($keys);
-            $child = array(
+            $child = [
                 $keys[0] => $value
-            );
+            ];
             array_shift($keys);
             foreach ($keys as $k) {
-                $child = array(
+                $child = [
                     $k => $child
-                );
+                ];
             }
 
-            $stack[] = array($child, &$result);
+            $stack[] = [$child, &$result];
 
             while (!empty($stack)) {
                 foreach ($stack as $curKey => &$curMerge) {
                     foreach ($curMerge[0] as $key => &$val) {
                         if (!empty($curMerge[1][$key]) && (array)$curMerge[1][$key] === $curMerge[1][$key] && (array)$val === $val) {
-                            $stack[] = array(&$val, &$curMerge[1][$key]);
+                            $stack[] = [&$val, &$curMerge[1][$key]];
                         } elseif ((int)$key === $key && isset($curMerge[1][$key])) {
                             $curMerge[1][] = $val;
                         } else {
@@ -406,10 +406,10 @@ class Hash
 
         $_key = '__set_item__';
 
-        $context = array($_key => array($data));
+        $context = [$_key => [$data]];
 
         foreach ($tokens as $token) {
-            $next = array();
+            $next = [];
 
             list($token, $conditions) = static::_splitConditions($token);
 
@@ -423,7 +423,7 @@ class Hash
 
             // Filter for attributes.
             if ($conditions) {
-                $filter = array();
+                $filter = [];
                 foreach ($next as $item) {
                     if (is_array($item) && static::_matches($item, $conditions)) {
                         $filter[] = $item;
@@ -431,7 +431,7 @@ class Hash
                 }
                 $next = $filter;
             }
-            $context = array($_key => $next);
+            $context = [$_key => $next];
 
         }
         return $context[$_key];
@@ -445,7 +445,7 @@ class Hash
      *   `static::_filter()` Which strips out all non-zero empty values.
      * @return array Filtered array
      */
-    public static function filter(array $data, $callback = array('self', '_filter'))
+    public static function filter(array $data, $callback = ['self', '_filter'])
     {
         foreach ($data as $k => $v) {
             if (is_array($v)) {
@@ -467,8 +467,8 @@ class Hash
      */
     public static function flatten(array $data, $separator = '.', $path = null)
     {
-        $result = array();
-        $stack = array();
+        $result = [];
+        $stack = [];
 
         reset($data);
         while (!empty($data)) {
@@ -478,7 +478,7 @@ class Hash
 
             if (is_array($element) && !empty($element)) {
                 if (!empty($data)) {
-                    $stack[] = array($data, $path);
+                    $stack[] = [$data, $path];
                 }
                 $data = $element;
                 reset($data);
@@ -558,7 +558,7 @@ class Hash
      */
     public static function maxDimensions(array $data)
     {
-        $depth = array();
+        $depth = [];
         if (reset($data) !== false) {
             foreach ($data as $value) {
                 $depth[] = is_array($value) ? static::maxDimensions($value) + 1 : 1;
@@ -588,7 +588,7 @@ class Hash
         $stack = [];
 
         foreach ($args as &$curArg) {
-            $stack[] = array((array)$curArg, &$return);
+            $stack[] = [(array)$curArg, &$return];
         }
         unset($curArg);
 
@@ -596,7 +596,7 @@ class Hash
             foreach ($stack as $curKey => &$curMerge) {
                 foreach ($curMerge[0] as $key => &$val) {
                     if (!empty($curMerge[1][$key]) && (array)$curMerge[1][$key] === $curMerge[1][$key] && (array)$val === $val) {
-                        $stack[] = array(&$val, &$curMerge[1][$key]);
+                        $stack[] = [&$val, &$curMerge[1][$key]];
                     } elseif ((int)$key === $key && isset($curMerge[1][$key])) {
                         $curMerge[1][] = $val;
                     } else {
@@ -652,21 +652,21 @@ class Hash
      * @return array of results, nested
      * @throws InvalidArgumentException When providing invalid data.
      */
-    public static function nest(array $data, array $options = array())
+    public static function nest(array $data, array $options = [])
     {
         if (!$data) {
             return $data;
         }
 
         $alias = key(current($data));
-        $options += array(
+        $options += [
             'idPath'     => "{n}.$alias.id",
             'parentPath' => "{n}.$alias.parent_id",
             'children'   => 'children',
             'root'       => null
-        );
+        ];
 
-        $return = $idMap = array();
+        $return = $idMap = [];
         $ids = static::extract($data, $options['idPath']);
 
         $idKeys = explode('.', $options['idPath']);
@@ -676,7 +676,7 @@ class Hash
         array_shift($parentKeys);
 
         foreach ($data as $result) {
-            $result[$options['children']] = array();
+            $result[$options['children']] = [];
 
             $id = static::get($result, $idKeys);
             $parentId = static::get($result, $parentKeys);
@@ -684,7 +684,7 @@ class Hash
             if (isset($idMap[$id][$options['children']])) {
                 $idMap[$id] = array_merge($result, $idMap[$id]);
             } else {
-                $idMap[$id] = array_merge($result, array($options['children'] => array()));
+                $idMap[$id] = array_merge($result, [$options['children'] => []]);
             }
             if (!$parentId || !in_array($parentId, $ids)) {
                 $return[] =& $idMap[$id];
@@ -735,7 +735,7 @@ class Hash
             }
         }
         if (!$numeric || $assoc) {
-            $newList = array();
+            $newList = [];
             for ($i = 0; $i < $count; $i++) {
                 if (is_int($keys[$i])) {
                     $newList[$data[$keys[$i]]] = null;
@@ -861,7 +861,7 @@ class Hash
     public static function sort(array $data, $path, $dir = 'asc', $type = 'regular')
     {
         if (empty($data)) {
-            return array();
+            return [];
         }
         $originalKeys = array_keys($data);
         $numeric = is_numeric(implode('', $originalKeys));
@@ -892,7 +892,7 @@ class Hash
 
         // $type can be overloaded for case insensitive sort
         if (is_array($type)) {
-            $type += array('ignoreCase' => false, 'type' => 'regular');
+            $type += ['ignoreCase' => false, 'type' => 'regular'];
             $ignoreCase = $type['ignoreCase'];
             $type = $type['type'];
         }
@@ -920,7 +920,7 @@ class Hash
         }
         array_multisort($values, $dir, $type, $keys, $dir);
 
-        $sorted = array();
+        $sorted = [];
         $keys = array_unique($keys);
 
         foreach ($keys as $k) {
@@ -1056,11 +1056,11 @@ class Hash
                     return $data;
                 }
                 if (!isset($_list[$key])) {
-                    $_list[$key] = array();
+                    $_list[$key] = [];
                 }
                 $_list =& $_list[$key];
                 if (!is_array($_list)) {
-                    $_list = array();
+                    $_list = [];
                 }
             } elseif ($op === 'remove') {
                 if ($i === $last) {
@@ -1092,7 +1092,7 @@ class Hash
             $token = substr($token, 0, $position);
         }
 
-        return array($token, $conditions);
+        return [$token, $conditions];
     }
 
     /**
@@ -1105,7 +1105,7 @@ class Hash
      */
     protected static function _squash(array $data, $key = null)
     {
-        $stack = array();
+        $stack = [];
         foreach ($data as $k => $r) {
             $id = $k;
             if ($key !== null) {
@@ -1114,7 +1114,7 @@ class Hash
             if (is_array($r) && !empty($r)) {
                 $stack = array_merge($stack, static::_squash($r, $id));
             } else {
-                $stack[] = array('id' => $id, 'value' => $r);
+                $stack[] = ['id' => $id, 'value' => $r];
             }
         }
         return $stack;
