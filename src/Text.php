@@ -27,7 +27,7 @@ class Text
      *
      * @var Transliterator|null Transliterator instance.
      */
-    protected static ?Transliterator $_defaultTransliterator;
+    protected static ?Transliterator $_defaultTransliterator = null;
 
     /**
      * Default transliterator id string.
@@ -1033,7 +1033,7 @@ class Text
         if ($i !== false) {
             $size = (float)substr($size, 0, $l);
 
-            return $size * pow(1024, $i + 1);
+            return $size * 1024 ** ($i + 1);
         }
 
         if (str_ends_with($size, 'B') && ctype_digit(substr($size, 0, -1))) {
