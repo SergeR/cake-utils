@@ -19,7 +19,8 @@
   },
   "require-dev": {
     "vimeo/psalm": ">=5.9.0",
-    "phpunit/phpunit": "^9"
+    "phpunit/phpunit": "^9",
+    "rector/rector": "^2.0"
   },
   "suggest": {
     "ext-intl": "To use Text::transliterate() or Text::slug()",
