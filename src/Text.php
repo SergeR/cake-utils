@@ -1160,8 +1160,7 @@ class Text
             '/[\s]+/mu'                                                        => $options['replacement'],
             sprintf('/^[%s]+|[%s]+$/', $quotedReplacement, $quotedReplacement) => '',
         ];
-        $string = preg_replace(array_keys($map), $map, $string);
 
-        return $string;
+        return preg_replace(array_keys($map), $map, $string);
     }
 }

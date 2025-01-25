@@ -12,7 +12,9 @@ class TextTransliterateTest extends TestCase
 {
     public function testTransliterate()
     {
-        $this->assertEquals('Moskva', Text::transliterate('Москва'));
-        $this->assertEquals("Strasse" , Text::transliterate('Straße'));
+        if(extension_loaded('intl')) {
+            $this->assertEquals('Moskva', Text::transliterate('Москва'));
+            $this->assertEquals("Strasse", Text::transliterate('Straße'));
+        }
     }
 }
