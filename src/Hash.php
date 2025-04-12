@@ -75,7 +75,7 @@ class Hash
      * @return array Combined array
      * @throws Exception
      */
-    public static function combine(array $data, string|array $keyPath, string|array|null $valuePath = null, string $groupPath = null): array
+    public static function combine(array $data, string|array $keyPath, string|array|null $valuePath = null, ?string $groupPath = null): array
     {
 
         if (empty($data)) {
@@ -1097,7 +1097,7 @@ class Hash
      * @param string|null $key The key for the data.
      * @return array
      */
-    protected static function _squash(array $data, string $key = null): array
+    protected static function _squash(array $data, ?string $key = null): array
     {
         $stack = [];
         foreach ($data as $k => $r) {
